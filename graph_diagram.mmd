@@ -1,0 +1,48 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	fetch_user_info(fetch_user_info)
+	product_recommender_tools(product_recommender_tools)
+	enter_product_recommender(enter_product_recommender)
+	product_recommender(product_recommender)
+	leave_skill(leave_skill)
+	enter_order_related(enter_order_related)
+	order_related(order_related)
+	search_order_tools(search_order_tools)
+	enter_policy_support(enter_policy_support)
+	policy_support(policy_support)
+	search_policy_tools(search_policy_tools)
+	primary_assistant(primary_assistant)
+	primary_assistant_tools(primary_assistant_tools)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> fetch_user_info;
+	enter_order_related --> order_related;
+	enter_policy_support --> policy_support;
+	enter_product_recommender --> product_recommender;
+	fetch_user_info -.-> primary_assistant;
+	leave_skill --> primary_assistant;
+	order_related -.-> __end__;
+	order_related -.-> leave_skill;
+	order_related -.-> search_order_tools;
+	policy_support -.-> __end__;
+	policy_support -.-> leave_skill;
+	policy_support -.-> search_policy_tools;
+	primary_assistant -.-> __end__;
+	primary_assistant -.-> enter_order_related;
+	primary_assistant -.-> enter_policy_support;
+	primary_assistant -.-> enter_product_recommender;
+	primary_assistant -.-> primary_assistant_tools;
+	primary_assistant_tools --> primary_assistant;
+	product_recommender -.-> __end__;
+	product_recommender -.-> leave_skill;
+	product_recommender -.-> product_recommender_tools;
+	product_recommender_tools --> product_recommender;
+	search_order_tools --> order_related;
+	search_policy_tools --> policy_support;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
