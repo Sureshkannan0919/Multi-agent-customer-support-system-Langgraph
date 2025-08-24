@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 import random
+from main import chat_response
 
 app = FastAPI(title="FastAPI Chatbot for Next.js")
 
@@ -25,14 +26,6 @@ class ChatResponse(BaseModel):
     user_id: Optional[str] = None
 
 # Simulated conversational AI (replace with real LLM if needed)
-def generate_response(message: str) -> str:
-    responses = [
-        f"Got it! You said: {message}. What's next?",
-        "Interesting point! Tell me more about that.",
-        f"You mentioned '{message}'. Want to dive deeper?",
-        "Cool, let's keep chatting! What's up?"
-    ]
-    return random.choice(responses)
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
@@ -40,7 +33,7 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
     # Generate response
-    bot_response = generate_response(request.message)
+    bot_response = chat_response(request.message)
     print(f"User ID: {request.userId}")
     
     return ChatResponse(response=bot_response, user_id=request.userId)

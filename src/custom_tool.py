@@ -15,37 +15,42 @@ except Exception as e:
 
 
 @tool
-def fetch_user_details(config: RunnableConfig = None) -> str:
+def fetch_user_details(config: RunnableConfig = None) -> dict:
     """Fetch user details from the database."""
     if not manager:
         return "Firebase manager not available"
     
     try:
         if config:
-            print(config)
             configuration = config.get("configurable", {})
             user_id = configuration.get("uid", "default_user")
-            print(user_id)
         else:
             user_id = "default_user"
         
         user_info = manager.get_user_info(user_id)
-        return str(user_info)
+        return user_info
     except Exception as e:
         return f"Error fetching user details: {str(e)}"
 
 @tool 
-def fetch_order_details(email: str) -> str:
-    """Fetch order details for a given email address."""
+def fetch_order_details(config: RunnableConfig = None) -> dict:
+    """Fetch order details from the database."""
     if not manager:
         return "Firebase manager not available"
-    
+
     try:
-        orders = manager.get_orders_by_email(email)
-        return str(orders)
+        if config:
+            configuration = config.get("configurable", {})
+            uid = configuration.get("uid", "default_user")
+        else:
+            uid = "default_user"
+
+        orders = manager.get_orders(uid)
+        return orders
     except Exception as e:
         return f"Error fetching order details: {str(e)}"
+    """Fetch order details for a given uid."""
 
-print(fetch_user_details.invoke({"configurable": {"uid": "ARaZlmY5mJRaEl3JaTKxes7oSVj2"}}))
+
 
 

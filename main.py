@@ -1,4 +1,8 @@
 import os
+import warnings
+warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", module="langchain_google_genai._function_utils")
+
 from datetime import datetime
 from typing import Dict, Any, Literal, Optional, Callable, TypedDict, Annotated
 from pydantic import BaseModel, Field 
@@ -19,10 +23,10 @@ from langgraph.prebuilt import ToolNode
 
 from src.custom_tool import fetch_user_details, fetch_order_details
 from src.policy_rag import lookup_policy
-from src.product_recomentaion_rag import serach_product
+from src.product_recomentaion_rag import search_product
 
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyBYq4iNSABoFq28fAHcmplc0EZME0qDnqI"
+os.environ["GOOGLE_API_KEY"] = "AIzaSyBt6szeaOhAbXacf2XGv9cjxSBwi1xplIE"
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")
 
@@ -135,6 +139,7 @@ product_recommendar = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
             content="You are a helpful e-commerce assistant for a sports products store (e.g., shoes, skates, apparel, accessories). "
+            " Rew"
             " Use the provided tools to search product catalog, sizing guides, inventory, shipping/returns policies, and order information to assist the user's queries. "
             " When searching, be persistent. Expand your query bounds if the first search returns no results. "
             " If a search comes up empty, broaden the query, try related categories, and suggest close matches before giving up."
@@ -147,9 +152,9 @@ product_recommendar = ChatPromptTemplate.from_messages(
         ("placeholder","{messages}"),
     ]
 ).partial(time=datetime.now)
-product_recommendation_tool = [serach_product]
+product_recommendation_tool = [search_product]
 
-product_recommender_runnable = product_recommendar | llm.bind_tools([serach_product, CompleteOrEscalate])
+product_recommender_runnable = product_recommendar | llm.bind_tools([search_product, CompleteOrEscalate])
 
 policy_support = ChatPromptTemplate.from_messages(
     [
@@ -174,16 +179,26 @@ order_related = ChatPromptTemplate.from_messages(
     [
         SystemMessage(
             content="You are a helpful e-commerce assistant for a sports products store (e.g., shoes, skates, apparel, accessories). "
-            "strictly dont ask user email for any circumstance"
-            "dont ask user email use provided tool  you already have all nesscary data"
-            " Use the provided tools to search product catalog, sizing guides, inventory, shipping/returns policies, and order information to assist the user's queries. "
-            " When searching, be persistent. Expand your query bounds if the first search returns no results. "
-            " If a search comes up empty, broaden the query, try related categories, and suggest close matches before giving up."
-            " use email in the user_info to search user order details"
-            "\n\nCurrent user:\n<User>\n{user_info}\n</User>"
-            "user_info contain username and email use email to search orders of user"
-            "\nCurrent time: {time}."
-            "use tool too search product and create result using search product result",
+            
+            "CRITICAL RULES:\n"
+            "- NEVER ask the user for their email address under any circumstances\n"
+            "- The user's email is already provided in the user_info below - use it directly with your tools\n"
+            "- Always use the available tools to search for order history, product information, and policies\n"
+            "- Use search order tool and summarize the order details show only order details\n"
+    
+
+            "SEARCH STRATEGY:\n"
+            "- tools and details are already provided in the user_info below - use it directly with your tools\n"
+            "- use tools before reply for the user\n"
+            "- Use the provided tools for: order status, billing address, total amount, shipping/returns policies, and order information\n"
+            
+            "USER CONTEXT:\n"
+            "<User>\n{user_info}\n</User>\n"
+            "The user_info contains the username and email - use the email directly with order search tools.\n"
+            
+            "Current time: {time}\n"
+            
+            "Always use tools to search for products and create comprehensive responses based on the search results.",
         ),
         ("placeholder", "{messages}"),
     ]
@@ -355,7 +370,7 @@ graph = builder.compile(checkpointer=memory)
 config = {
     "configurable": {
         # The passenger_id is used in our flight tools to
-        # fetch the user's flight information
+        # fetch the user's information
         "uid": "ARaZlmY5mJRaEl3JaTKxes7oSVj2",
         # Checkpoints are accessed by thread_id
         "thread_id": 1,
@@ -374,29 +389,80 @@ def _print_event(event: dict, _printed: set, max_length=1500):
             msg_repr = message.pretty_repr(html=True)
             if len(msg_repr) > max_length:
                 msg_repr = msg_repr[:max_length] + " ... (truncated)"
+            #print(message.content)
             print(msg_repr)
-            _printed.add(message.id)
-
+    return _response
 
 _printed = set()
 
 def stream_graph(user_input: str):
+    final_output = []
     events = graph.stream(
         {"messages": ("user", user_input)}, config, stream_mode="values"
     )
     for event in events:
-        _print_event(event, _printed)
+        message, metadata = event
+        print("==========================================================")
+        print(message)
+        #if hasattr(message, 'content') and message.content:
+            #print(message.content, end='', flush=True)
+    #return final_output
+
+def chat_response(user_input: str):
+    content_by_id = {}
+    last_stop_message = None
+    last_stop_content = ""
+    _message = []
+    events = graph.stream(
+        {"messages": ("user", user_input)}, config, stream_mode="messages"
+    )
+    
+    for event in events:
+        message, metadata = event
+        
+        if hasattr(message, 'id') and hasattr(message, 'content'):
+            msg_id = message.id
+            
+            # Combine content by ID
+            if msg_id not in content_by_id:
+                content_by_id[msg_id] = ""
+            content_by_id[msg_id] += message.content
+            
+            # Check if this message has finish_reason = 'STOP'
+            finish_reason = None
+            if hasattr(message, 'response_metadata'):
+                finish_reason = message.response_metadata.get('finish_reason')
+            elif 'response_metadata' in metadata:
+                finish_reason = metadata['response_metadata'].get('finish_reason')
+            
+            # If this chunk has finish_reason = 'STOP', it's our final message
+            if finish_reason == 'STOP':
+                last_stop_message = message
+                last_stop_content = content_by_id[msg_id]
+                if last_stop_content:
+                    _message.append(last_stop_content)
+                    print("contenet:  ",last_stop_content) # Get the complete combined content
+    
+    # Return the complete content of the last message with finish_reason = 'STOP'
+    #return last_stop_content, last_stop_message
+    return _message[-1]
 
 
-while True:
-    try:
-        user_input = input("User: ")
-        if user_input.lower() in ["quit", "exit", "q"]:
-            print("Goodbye!")
-            break
-        stream_graph(user_input)
-    except:
-        # fallback if input() is not available (e.g., in notebooks)
-        user_input = input("User: ")
-        stream_graph_updates(user_input)
-        break
+# while True:
+#     try:
+#         user_input = input("User: ")
+#         if user_input.lower(
+#         ) in ["quit", "exit", "q"]:
+#             print("Goodbye!")
+#             break
+#         stream_graph(user_input)
+       
+
+
+#     except:
+#         # fallback if input() is not available (e.g., in notebooks)
+#         user_input = input("User: ")
+#         stream_graph(user_input)
+#         break
+
+

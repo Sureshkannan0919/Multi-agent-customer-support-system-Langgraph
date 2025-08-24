@@ -72,7 +72,11 @@ class FirestoreManager:
                 'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
             }
 
-    def get_orders_by_email(self, email) -> dict:
+    def get_orders(self, uid:str) -> dict:
+        
+        user_info = self.get_user_info(uid)
+        email = user_info.get('email', None)
+
         try:
             orders_ref = self.db.collection('orders')
             query = orders_ref.where('customer.email', '==', email)
