@@ -29,7 +29,7 @@ import uuid
 
 
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyBKD-7Lrpvmpk_MtRoWwACIVdsjFEdePhw"
+os.environ["GOOGLE_API_KEY"] = "GEMINI-API-KEY"
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
 
