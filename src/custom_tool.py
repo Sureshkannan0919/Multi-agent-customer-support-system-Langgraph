@@ -11,7 +11,7 @@ except ImportError:
 
 try:
     manager = FirestoreManager()
-    manager.connection("/home/suresh/projects/shopwave-9yek6-firebase-adminsdk-fbsvc-57be3221d4.json")
+    manager.connection("cred.json")
 except Exception as e:
     print(f"Warning: Firebase manager initialization failed: {e}")
     manager = None
