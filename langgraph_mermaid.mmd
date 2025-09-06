@@ -6,10 +6,13 @@ config:
 graph TD;
 	__start__([<p>__start__</p>]):::first
 	fetch_user_info(fetch_user_info)
-	product_recommender_tools(product_recommender_tools)
+	product_search_tools(product_search_tools)
 	enter_product_recommender(enter_product_recommender)
 	product_recommender(product_recommender)
 	leave_skill(leave_skill)
+	enter_product_comparator(enter_product_comparator)
+	product_comparator(product_comparator)
+	search_similar_product(search_similar_product)
 	enter_order_related(enter_order_related)
 	order_related(order_related)
 	search_order_tools(search_order_tools)
@@ -22,6 +25,7 @@ graph TD;
 	__start__ --> fetch_user_info;
 	enter_order_related --> order_related;
 	enter_policy_support --> policy_support;
+	enter_product_comparator --> product_comparator;
 	enter_product_recommender --> product_recommender;
 	fetch_user_info -.-> primary_assistant;
 	leave_skill --> primary_assistant;
@@ -34,15 +38,20 @@ graph TD;
 	primary_assistant -.-> __end__;
 	primary_assistant -.-> enter_order_related;
 	primary_assistant -.-> enter_policy_support;
+	primary_assistant -.-> enter_product_comparator;
 	primary_assistant -.-> enter_product_recommender;
 	primary_assistant -.-> primary_assistant_tools;
 	primary_assistant_tools --> primary_assistant;
+	product_comparator -.-> __end__;
+	product_comparator -.-> leave_skill;
+	product_comparator -.-> search_similar_product;
 	product_recommender -.-> __end__;
 	product_recommender -.-> leave_skill;
-	product_recommender -.-> product_recommender_tools;
-	product_recommender_tools --> product_recommender;
+	product_recommender -.-> product_search_tools;
+	product_search_tools --> product_recommender;
 	search_order_tools --> order_related;
 	search_policy_tools --> policy_support;
+	search_similar_product --> product_comparator;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc

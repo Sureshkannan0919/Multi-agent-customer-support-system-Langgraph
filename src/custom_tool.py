@@ -4,7 +4,10 @@ except ImportError:
     from firebase_manager import FirestoreManager
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
-
+try:
+    from .product_search import get_product
+except ImportError:
+    from product_search import get_product
 
 try:
     manager = FirestoreManager()
@@ -52,5 +55,13 @@ def fetch_order_details(config: RunnableConfig = None) -> dict:
     """Fetch order details for a given uid."""
 
 
+@tool
+def search_product_online(search_term: str) -> str:
+    """Search for a simiar product in amazon and flikart."""
+    try:
+        products = get_product(search_term)
+        return products
 
+    except Exception as e:
+        return f"Error searching for products: {str(e)}"
 

@@ -33,6 +33,7 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
     # Generate response
+    
     bot_response = chat_response(request.message)
     print(f"User ID: {request.userId}")
     
