@@ -34,7 +34,7 @@ class GeminiVectorStoreRetriever:
     @classmethod
     def from_docs(cls, docs: List[Dict], gemini_client):
         # Configure the Gemini API
-        genai.configure(api_key='AIzaSyBKD-7Lrpvmpk_MtRoWwACIVdsjFEdePhw')
+        genai.configure(api_key='GEMINI-API-KEY')
         
         # Get embeddings using Gemini's embedding model
         model = 'models/embedding-001'  # Updated model name
