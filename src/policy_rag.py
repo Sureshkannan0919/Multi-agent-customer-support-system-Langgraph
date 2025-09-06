@@ -5,7 +5,7 @@ from langchain_core.tools import tool
 from typing import List, Dict
 
 try:
-    with open("/home/suresh/Documents/ecommerce_policies_txt.md", "r", encoding='utf-8') as file:
+    with open("ecommerce_policies_txt.md", "r", encoding='utf-8') as file:
         content = file.read()
 except FileNotFoundError:
     print("Warning: Policy file not found. Using default content.")
