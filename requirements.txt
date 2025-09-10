@@ -242,7 +242,7 @@ threadpoolctl==3.6.0
 tiktoken==0.11.0
 tinycss2==1.4.0
 tokenizers==0.21.4
-torch==2.8.0+cpu
+torch
 tornado==6.5.2
 tqdm==4.67.1
 traitlets==5.14.3
